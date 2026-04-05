@@ -1,0 +1,34 @@
+{
+  "name": "display_file_for_download",
+  "description": "Reads a file from the sandbox and displays its full content in a formatted way with file name, size, and clear copy markers so the user can easily copy and save it locally.",
+  "code": "def display_file_for_download(file_path: str) -> str:\n    \"\"\"Reads a file from the sandbox and displays its full content in a formatted way for easy copying and saving locally.\"\"\"\n    try:\n        from pathlib import Path\n        \n        path = Path(file_path)\n        \n        # Security check: ensure path is relative and doesn't escape current directory\n        if path.is_absolute():\n            return \"Error: Absolute paths are not allowed. Please use a relative path.\"\n        \n        try:\n            path.resolve().relative_to(Path('.').resolve())\n        except ValueError:\n            return \"Error: Path must be within the current working directory.\"\n        \n        if not path.exists():\n            return f\"Error: File '{file_path}' does not exist.\"\n        \n        if not path.is_file():\n            return f\"Error: '{file_path}' is not a file.\"\n        \n        # Get file size\n        file_size = path.stat().st_size\n        \n        # Format file size for display\n        if file_size < 1024:\n            size_str = f\"{file_size} bytes\"\n        elif file_size < 1024 * 1024:\n            size_str = f\"{file_size / 1024:.2f} KB\"\n        else:\n            size_str = f\"{file_size / (1024 * 1024):.2f} MB\"\n        \n        # Try reading as text first, fall back to binary info\n        try:\n            content = path.read_text(encoding='utf-8')\n        except UnicodeDecodeError:\n            try:\n                content = path.read_text(encoding='latin-1')\n            except Exception:\n                return (\n                    f\"📄 File: {path.name}\\n\"\n                    f\"📁 Path: {file_path}\\n\"\n                    f\"📏 Size: {size_str}\\n\"\n                    f\"\\n⚠️ This appears to be a binary file and cannot be displayed as text.\\n\"\n                    f\"Use a different method to download binary files.\"\n                )\n        \n        file_name = path.name\n        extension = path.suffix.lstrip('.') if path.suffix else 'txt'\n        \n        # Build formatted output\n        separator = \"=\" * 60\n        output_lines = [\n            separator,\n            f\"📄 File: {file_name}\",\n            f\"📁 Path: {file_path}\",\n            f\"📏 Size: {size_str}\",\n            f\"📋 Lines: {len(content.splitlines())}\",\n            separator,\n            \"\",\n            f\"--- START OF FILE: {file_name} ---\",\n            \"\",\n            content,\n            \"\",\n            f\"--- END OF FILE: {file_name} ---\",\n            \"\",\n            separator,\n            f\"💡 To save: Copy the content between the START/END markers above\",\n            f\"   and save it as '{file_name}'\",\n            separator,\n        ]\n        \n        return \"\\n\".join(output_lines)\n    \n    except Exception as e:\n        return f\"Error displaying file '{file_path}': {type(e).__name__}: {str(e)}\"",
+  "schema": {
+    "name": "display_file_for_download",
+    "description": "Reads a file from the sandbox and displays its full content in a formatted way with file name, size, and clear copy markers so the user can easily copy and save it locally.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "description": "The relative path of the file in the sandbox to display"
+        }
+      },
+      "required": [
+        "file_path"
+      ]
+    }
+  },
+  "test_cases": [
+    {
+      "file_path": "test_output.txt"
+    },
+    {
+      "file_path": "nonexistent_file.txt"
+    },
+    {
+      "file_path": "results/data.csv"
+    }
+  ],
+  "version": 1,
+  "created_by": "agent"
+}

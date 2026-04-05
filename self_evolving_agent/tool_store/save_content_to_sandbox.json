@@ -1,0 +1,42 @@
+{
+  "name": "save_content_to_sandbox",
+  "description": "Save text content to a file in the sandbox, creating directories as needed. Simulates an upload experience by writing user-provided content to a specified file path.",
+  "code": "def save_content_to_sandbox(file_path: str, content: str) -> str:\n    \"\"\"Save text content to a file in the sandbox, creating directories as needed.\"\"\"\n    try:\n        from pathlib import Path\n\n        # Ensure the path is relative (no absolute paths)\n        path = Path(file_path)\n        if path.is_absolute():\n            return \"Error: file_path must be a relative path, not an absolute path.\"\n\n        # Create parent directories if they don't exist\n        path.parent.mkdir(parents=True, exist_ok=True)\n\n        # Write the content to the file\n        path.write_text(content, encoding=\"utf-8\")\n\n        # Get the file size\n        file_size = path.stat().st_size\n\n        # Create a preview of the content (first 200 characters)\n        preview = content[:200]\n        if len(content) > 200:\n            preview += \"...\"\n\n        return (\n            f\"File saved successfully!\\n\"\n            f\"Path: {file_path}\\n\"\n            f\"Size: {file_size} bytes\\n\"\n            f\"Preview:\\n{preview}\"\n        )\n\n    except Exception as e:\n        return f\"Error saving file: {type(e).__name__}: {str(e)}\"",
+  "schema": {
+    "name": "save_content_to_sandbox",
+    "description": "Save text content to a file in the sandbox, creating directories as needed. Simulates an upload experience by writing user-provided content to a specified file path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "description": "The relative path where the file should be saved in the sandbox (e.g., 'data/input.txt'). Parent directories will be created automatically."
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content to write into the file."
+        }
+      },
+      "required": [
+        "file_path",
+        "content"
+      ]
+    }
+  },
+  "test_cases": [
+    {
+      "file_path": "test_output/hello.txt",
+      "content": "Hello, world! This is a test file."
+    },
+    {
+      "file_path": "data/sample.csv",
+      "content": "name,age,city;Alice,30,New York;Bob,25,San Francisco"
+    },
+    {
+      "file_path": "notes/long_content.md",
+      "content": "This is a longer piece of content that is designed to test the preview functionality of the save_content_to_sandbox tool. It contains more than two hundred characters so we can verify that the preview is properly truncated with an ellipsis at the end. Here is some additional filler text to make it longer."
+    }
+  ],
+  "version": 1,
+  "created_by": "agent"
+}
